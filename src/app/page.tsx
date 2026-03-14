@@ -33,7 +33,8 @@ import { runUpscale } from '@/app/lib/upscale-actions';
 interface ProcessItem {
   id: string;
   name: string;
-  original: string;
+  file: File;
+  previewUrl: string;
   upscaled?: string;
   status: 'pending' | 'processing' | 'completed' | 'error';
   error?: string;
@@ -70,22 +71,16 @@ export default function ChaewonHDApp() {
     const newItems: ProcessItem[] = Array.from(files).map(file => ({
       id: Math.random().toString(36).substr(2, 9),
       name: file.name,
-      original: '',
+      file,
+      previewUrl: URL.createObjectURL(file),
       status: 'pending',
       progress: 0
     }));
 
     setItems(prev => [...prev, ...newItems]);
-
-    Array.from(files).forEach((file) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setItems(prev => prev.map(item =>
-          item.name === file.name && !item.original ? { ...item, original: reader.result as string } : item
-        ));
-      };
-      reader.readAsDataURL(file);
-    });
+    
+    // Clear the input value so the same files can be selected again if needed
+    e.target.value = '';
   }, []);
 
   const handleUpscale = async (item: ProcessItem) => {
@@ -97,8 +92,15 @@ export default function ChaewonHDApp() {
     setItems(prev => prev.map(i => i.id === item.id ? { ...i, status: 'processing', progress: 30 } : i));
 
     try {
+      const base64Image = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(item.file);
+      });
+
       const result = await runUpscale({
-        images: [item.original],
+        images: [base64Image],
         modelName: model,
         resolutionPrompt: resolution,
         aspectRatio: ratio
@@ -126,14 +128,18 @@ export default function ChaewonHDApp() {
     if (processableItems.length === 0) return;
 
     setIsProcessingAll(true);
-    for (const item of processableItems) {
-      await handleUpscale(item);
-    }
+    await Promise.all(processableItems.map(item => handleUpscale(item)));
     setIsProcessingAll(false);
   };
 
   const removeItem = (id: string) => {
-    setItems(prev => prev.filter(i => i.id !== id));
+    setItems(prev => {
+      const item = prev.find(i => i.id === id);
+      if (item) {
+        URL.revokeObjectURL(item.previewUrl);
+      }
+      return prev.filter(i => i.id !== id);
+    });
   };
 
   const downloadImage = (url: string, filename: string) => {
@@ -333,7 +339,7 @@ export default function ChaewonHDApp() {
                       <div key={item.id} className="group relative bg-card border rounded-xl p-4 transition-all hover:border-primary/50 hover:shadow-sm">
                         <div className="flex items-start gap-4">
                           <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-muted">
-                            {item.original && <img src={item.original} alt={item.name} className="w-full h-full object-cover" />}
+                            {item.previewUrl && <img src={item.previewUrl} alt={item.name} className="w-full h-full object-cover" />}
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between mb-1">
@@ -445,7 +451,7 @@ export default function ChaewonHDApp() {
 
                         <div className="relative group overflow-hidden rounded-lg shadow-xl">
                           <ImageComparison
-                            original={item.original}
+                            original={item.previewUrl}
                             upscaled={item.upscaled!}
                             className="aspect-[4/3]"
                           />
