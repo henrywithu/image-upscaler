@@ -96,8 +96,6 @@ const upscaleImageWithAIFlow = ai.defineFlow(
         continue;
       }
 
-      // We use explicit pixel instructions in the prompt to force the model to 
-      // generate a high-resolution output matching the user's selection.
       const promptParts = [
         {
           media: {
@@ -106,16 +104,21 @@ const upscaleImageWithAIFlow = ai.defineFlow(
           },
         },
         {
-          text: `STRICT TASK: Upscale this image to a professional, high-fidelity PNG version.
+          text: `STRICT TASK: Perform Super Resolution Upscaling on this image.
           
 REQUIRED SPECIFICATIONS:
 - Target Resolution: ${pixelDim}
 - Aspect Ratio: ${input.aspectRatio}
 - Output Format: PNG
-- Quality: Super Resolution, extremely sharp details, enhanced textures
+- Quality: Ultra-High Fidelity, Pixel-Perfect, Super Resolution
 
-INSTRUCTIONS: 
-Redraw and enhance the input image so that it matches the Target Resolution of ${pixelDim}. Do not return a low-resolution or standard-sized preview. The output MUST be a high-resolution image. Maintain perfect consistency with the original subject and composition.`,
+CRITICAL INSTRUCTIONS: 
+1. DO NOT change any content, subjects, or composition of the image.
+2. ONLY increase the resolution and clarity of the existing image to reach the Target Resolution of ${pixelDim}.
+3. The output MUST be a high-resolution version of the EXACT same image.
+4. Enhance textures and sharpness while maintaining 100% fidelity to the original.
+5. Do not add new elements, do not interpret the scene creatively, and do not alter colors or lighting.
+6. The final output must be exactly the input image but significantly clearer and at the specified ${pixelDim} size.`,
         },
       ];
 
