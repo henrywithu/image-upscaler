@@ -1,15 +1,15 @@
 'use client';
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { 
-  Upload, 
-  Settings as SettingsIcon, 
-  Image as ImageIcon, 
-  Download, 
-  RefreshCw, 
-  Key, 
-  Trash2, 
-  CheckCircle2, 
+import {
+  Upload,
+  Settings as SettingsIcon,
+  Image as ImageIcon,
+  Download,
+  RefreshCw,
+  Key,
+  Trash2,
+  CheckCircle2,
   Sparkles,
   ArrowRight,
   Sun,
@@ -43,7 +43,7 @@ interface ProcessItem {
 export default function ChaewonHDApp() {
   const [apiKey, setApiKey] = useState('');
   const [model, setModel] = useState('gemini-3.1-flash-image-preview');
-  const [ratio, setRatio] = useState('16:9');
+  const [ratio, setRatio] = useState('original');
   const [resolution, setResolution] = useState('2K');
   const [items, setItems] = useState<ProcessItem[]>([]);
   const [isProcessingAll, setIsProcessingAll] = useState(false);
@@ -70,7 +70,7 @@ export default function ChaewonHDApp() {
     const newItems: ProcessItem[] = Array.from(files).map(file => ({
       id: Math.random().toString(36).substr(2, 9),
       name: file.name,
-      original: '', 
+      original: '',
       status: 'pending',
       progress: 0
     }));
@@ -80,7 +80,7 @@ export default function ChaewonHDApp() {
     Array.from(files).forEach((file) => {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setItems(prev => prev.map(item => 
+        setItems(prev => prev.map(item =>
           item.name === file.name && !item.original ? { ...item, original: reader.result as string } : item
         ));
       };
@@ -104,18 +104,18 @@ export default function ChaewonHDApp() {
         aspectRatio: ratio
       }, apiKey);
 
-      setItems(prev => prev.map(i => i.id === item.id ? { 
-        ...i, 
-        upscaled: result.upscaledImages[0], 
-        status: 'completed', 
-        progress: 100 
+      setItems(prev => prev.map(i => i.id === item.id ? {
+        ...i,
+        upscaled: result.upscaledImages[0],
+        status: 'completed',
+        progress: 100
       } : i));
     } catch (error: any) {
-      setItems(prev => prev.map(i => i.id === item.id ? { 
-        ...i, 
-        status: 'error', 
+      setItems(prev => prev.map(i => i.id === item.id ? {
+        ...i,
+        status: 'error',
         error: error.message,
-        progress: 0 
+        progress: 0
       } : i));
       toast({ variant: 'destructive', title: 'Generation Error', description: error.message });
     }
@@ -124,7 +124,7 @@ export default function ChaewonHDApp() {
   const upscaleAll = async () => {
     const pendingItems = items.filter(i => i.status === 'pending');
     if (pendingItems.length === 0) return;
-    
+
     setIsProcessingAll(true);
     for (const item of pendingItems) {
       await handleUpscale(item);
@@ -146,10 +146,27 @@ export default function ChaewonHDApp() {
     document.body.removeChild(link);
   };
 
+  const downloadAll = async () => {
+    const completedItems = items.filter(i => i.status === 'completed' && i.upscaled);
+    for (let i = 0; i < completedItems.length; i++) {
+      const item = completedItems[i];
+      const link = document.createElement('a');
+      link.href = item.upscaled!;
+      const baseName = item.name.substring(0, item.name.lastIndexOf('.')) || item.name;
+      link.download = `upscaled-${baseName}-${i + 1}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Small delay prevents browsers from ignoring rapid subsequent downloads
+      await new Promise(resolve => setTimeout(resolve, 300));
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground transition-colors duration-300">
       <Toaster />
-      
+
       {/* Navigation Header */}
       <header className="border-b bg-card py-4 px-6 flex items-center justify-between sticky top-0 z-10 shadow-sm">
         <div className="flex items-center gap-2">
@@ -158,16 +175,16 @@ export default function ChaewonHDApp() {
           </div>
           <h1 className="text-xl font-bold tracking-tight text-primary">ChaewonHD</h1>
         </div>
-        
+
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2">
             <Sun className={`w-4 h-4 ${theme === 'light' ? 'text-primary' : 'text-muted-foreground'}`} />
             <Switch checked={theme === 'dark'} onCheckedChange={toggleTheme} aria-label="Toggle dark mode" />
             <Moon className={`w-4 h-4 ${theme === 'dark' ? 'text-primary' : 'text-muted-foreground'}`} />
           </div>
-          
+
           <Separator orientation="vertical" className="h-6 hidden sm:block" />
-          
+
           <div className="flex items-center gap-4">
             <Badge variant="outline" className="hidden sm:flex bg-muted/50 border-primary/20 text-primary">AI-Powered Clarity</Badge>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -179,7 +196,7 @@ export default function ChaewonHDApp() {
       </header>
 
       <main className="flex-1 p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 overflow-hidden">
-        
+
         {/* Section 1: Settings & Configuration */}
         <section className="lg:col-span-3 space-y-6 overflow-y-auto">
           <Card className="border-none shadow-md">
@@ -194,10 +211,10 @@ export default function ChaewonHDApp() {
               <div className="space-y-2">
                 <Label htmlFor="apiKey">Google API Key</Label>
                 <div className="relative">
-                  <Input 
-                    id="apiKey" 
-                    type="password" 
-                    placeholder="Enter your API Key..." 
+                  <Input
+                    id="apiKey"
+                    type="password"
+                    placeholder="Enter your API Key..."
                     className="pr-10"
                     value={apiKey}
                     onChange={(e) => setApiKey(e.target.value)}
@@ -217,7 +234,7 @@ export default function ChaewonHDApp() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="gemini-3.1-flash-image-preview">Gemini 3.1 Flash Image</SelectItem>
-                    <SelectItem value="gemini-3-pro-image-preview">Gemini 3 Pro Image (High Quality)</SelectItem>
+                    <SelectItem value="gemini-3-pro-image-preview">Gemini 3 Pro Image</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -229,6 +246,7 @@ export default function ChaewonHDApp() {
                     <SelectValue placeholder="Select ratio" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="original">Original Ratio</SelectItem>
                     <SelectItem value="1:1">1:1 Square</SelectItem>
                     <SelectItem value="1:4">1:4 Ultra Tall</SelectItem>
                     <SelectItem value="1:8">1:8 Panoramic Tall</SelectItem>
@@ -276,11 +294,11 @@ export default function ChaewonHDApp() {
                 Upload your images, verify your settings, and let our AI enhance every pixel for you.
               </p>
               <div className="relative">
-                <input 
-                  type="file" 
-                  multiple 
-                  accept="image/*" 
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   onChange={onFileUpload}
                 />
                 <Button variant="secondary" className="w-full bg-white text-primary hover:bg-white/90">
@@ -300,8 +318,8 @@ export default function ChaewonHDApp() {
                 <CardDescription>{items.length} images in queue.</CardDescription>
               </div>
               {items.length > 0 && (
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   className="bg-accent text-accent-foreground hover:bg-accent/80"
                   disabled={isProcessingAll || items.every(i => i.status !== 'pending')}
                   onClick={upscaleAll}
@@ -330,14 +348,14 @@ export default function ChaewonHDApp() {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between mb-1">
                               <h4 className="text-sm font-medium truncate pr-4">{item.name}</h4>
-                              <button 
+                              <button
                                 onClick={() => removeItem(item.id)}
                                 className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
                               >
                                 <Trash2 className="w-4 h-4" />
                               </button>
                             </div>
-                            
+
                             <div className="flex items-center gap-2 mb-2">
                               {item.status === 'pending' && <Badge variant="secondary" className="text-[10px] py-0">Pending</Badge>}
                               {item.status === 'processing' && (
@@ -360,13 +378,13 @@ export default function ChaewonHDApp() {
                             {(item.status === 'processing' || item.status === 'completed') && (
                               <Progress value={item.progress} className="h-1.5" />
                             )}
-                            
+
                             {item.status === 'error' && (
                               <p className="text-[10px] text-destructive truncate">{item.error}</p>
                             )}
                           </div>
                         </div>
-                        
+
                         {item.status === 'pending' && (
                           <div className="mt-3 flex justify-end">
                             <Button size="sm" variant="ghost" className="h-8 text-primary" onClick={() => handleUpscale(item)}>
@@ -387,9 +405,21 @@ export default function ChaewonHDApp() {
         {/* Section 3: Output/Preview Gallery */}
         <section className="lg:col-span-5 flex flex-col gap-6 overflow-hidden">
           <Card className="flex-1 flex flex-col overflow-hidden border-none shadow-md">
-            <CardHeader>
-              <CardTitle className="text-lg">Preview & Comparison</CardTitle>
-              <CardDescription>View your enhanced results and download files.</CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+              <div>
+                <CardTitle className="text-lg">Preview & Comparison</CardTitle>
+                <CardDescription>View your enhanced results and download files.</CardDescription>
+              </div>
+              {items.filter(i => i.status === 'completed' && i.upscaled).length > 0 && (
+                <Button
+                  size="sm"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90"
+                  onClick={downloadAll}
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download All
+                </Button>
+              )}
             </CardHeader>
             <CardContent className="flex-1 flex flex-col overflow-hidden p-0">
               <ScrollArea className="flex-1 px-6 pb-6">
@@ -412,9 +442,9 @@ export default function ChaewonHDApp() {
                             <CheckCircle2 className="w-4 h-4 text-green-500" />
                             {item.name}
                           </h4>
-                          <Button 
-                            size="sm" 
-                            variant="secondary" 
+                          <Button
+                            size="sm"
+                            variant="secondary"
                             className="h-8 bg-primary text-white hover:bg-primary/90"
                             onClick={() => downloadImage(item.upscaled!, item.name)}
                           >
@@ -422,15 +452,15 @@ export default function ChaewonHDApp() {
                             Download
                           </Button>
                         </div>
-                        
+
                         <div className="relative group overflow-hidden rounded-lg shadow-xl">
-                          <ImageComparison 
-                            original={item.original} 
-                            upscaled={item.upscaled!} 
+                          <ImageComparison
+                            original={item.original}
+                            upscaled={item.upscaled!}
                             className="aspect-[4/3]"
                           />
                         </div>
-                        
+
                         <div className="flex gap-4 pt-2">
                           <div className="flex-1 text-[10px] text-muted-foreground bg-white/50 p-2 rounded">
                             <span className="block font-bold uppercase mb-1">Source Details</span>

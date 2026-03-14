@@ -79,10 +79,7 @@ const upscaleImageWithAIFlow = ai.defineFlow(
           },
         },
         {
-          text: `STRICT SUPER RESOLUTION TASK: Perform pixel-perfect upscaling on this image. 
-          MAINTAIN 100% FIDELITY: Do not alter content, composition, subjects, or lighting. 
-          Enhance only the clarity and textures. 
-          OUTPUT FORMAT: PNG.`,
+          text: `Upscale this exact image to a higher resolution. You must maintain the exact original content, details, colors, structure, and composition. DO NOT change the original image in any way, DO NOT add or remove elements, and DO NOT alter the core style. It must be an exact reproduction of the Original Image but merely at a higher resolution and with better clarity.`,
         },
       ];
 
@@ -96,7 +93,7 @@ const upscaleImageWithAIFlow = ai.defineFlow(
             responseModalities: ['IMAGE'],
             // Native image parameters passed as model configurations
             imageConfig: {
-              aspectRatio: input.aspectRatio,
+              ...(input.aspectRatio !== 'original' ? { aspectRatio: input.aspectRatio } : {}),
               imageSize: input.resolutionPrompt,
             }
           } as any,
