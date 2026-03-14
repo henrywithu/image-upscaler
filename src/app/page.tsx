@@ -474,7 +474,7 @@ export default function ChaewonHDApp() {
 
       {/* Footer Info */}
       <footer className="py-3 px-6 border-t bg-card text-[10px] text-muted-foreground flex justify-between items-center">
-        <p>© 2024 ChaewonHD AI. All processing is powered by Gemini AI.</p>
+        <p>&copy; {new Date().getFullYear()} ChaewonHD. All processing is powered by Gemini AI.</p>
         <div className="flex gap-4">
           <span className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-green-500" /> Secure Processing</span>
           <span className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-green-500" /> Local Downloads</span>
