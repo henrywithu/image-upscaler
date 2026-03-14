@@ -24,10 +24,10 @@ const UpscaleImageInputSchema = z.object({
     )
   ),
   modelName: z.string().describe(
-    "The name of the Google AI model to use for upscaling, e.g., 'gemini-3.1-flash-image-preview' or 'gemini-2.5-flash-image'."
+    "The name of the Google AI model to use for upscaling."
   ),
   resolutionPrompt: z.string().describe(
-    "A descriptive prompt for the desired output resolution, e.g., '2K', '4K', '1K'."
+    "The desired output resolution, e.g., '2K', '4K', '1K', '512'."
   ),
   aspectRatio: z.string().describe(
     "The desired aspect ratio for the output image, e.g., '16:9', '1:1'."
@@ -43,30 +43,6 @@ const UpscaleImageOutputSchema = z.object({
   )
 });
 export type UpscaleImageOutput = z.infer<typeof UpscaleImageOutputSchema>;
-
-/**
- * Maps abstract resolution labels and aspect ratios to explicit pixel instructions.
- * This helps the AI model understand the exact target size required.
- */
-function getPixelInstruction(resolution: string, ratio: string): string {
-  const resMap: Record<string, number> = {
-    "512": 512,
-    "1K": 1080,
-    "2K": 1440,
-    "4K": 2160
-  };
-  
-  const targetH = resMap[resolution] || 1080;
-  const ratioParts = ratio.split(':').map(Number);
-  
-  if (ratioParts.length === 2 && !isNaN(ratioParts[0]) && !isNaN(ratioParts[1])) {
-    const factor = targetH / ratioParts[1];
-    const targetW = Math.round(ratioParts[0] * factor);
-    return `${targetW}x${targetH} pixels`;
-  }
-  
-  return `${resolution} resolution`;
-}
 
 /**
  * Upscales one or more images using a specified Google AI image generation model.
@@ -87,7 +63,6 @@ const upscaleImageWithAIFlow = ai.defineFlow(
   },
   async (input) => {
     const upscaledImages: string[] = [];
-    const pixelDim = getPixelInstruction(input.resolutionPrompt, input.aspectRatio);
 
     for (const imageDataUri of input.images) {
       const mimeType = getMimeTypeFromDataUri(imageDataUri);
@@ -107,18 +82,14 @@ const upscaleImageWithAIFlow = ai.defineFlow(
           text: `STRICT TASK: Perform Super Resolution Upscaling on this image.
           
 REQUIRED SPECIFICATIONS:
-- Target Resolution: ${pixelDim}
-- Aspect Ratio: ${input.aspectRatio}
 - Output Format: PNG
 - Quality: Ultra-High Fidelity, Pixel-Perfect, Super Resolution
 
 CRITICAL INSTRUCTIONS: 
 1. DO NOT change any content, subjects, or composition of the image.
-2. ONLY increase the resolution and clarity of the existing image to reach the Target Resolution of ${pixelDim}.
-3. The output MUST be a high-resolution version of the EXACT same image.
-4. Enhance textures and sharpness while maintaining 100% fidelity to the original.
-5. Do not add new elements, do not interpret the scene creatively, and do not alter colors or lighting.
-6. The final output must be exactly the input image but significantly clearer and at the specified ${pixelDim} size.`,
+2. The output MUST be a high-resolution version of the EXACT same image.
+3. Maintain 100% fidelity to the original. Enhance textures and sharpness only.
+4. Do not add new elements, interpret the scene creatively, or alter lighting.`,
         },
       ];
 
@@ -127,8 +98,11 @@ CRITICAL INSTRUCTIONS:
           model: googleAI.model(input.modelName),
           prompt: promptParts,
           config: {
-            responseModalities: ['IMAGE']
-          },
+            responseModalities: ['IMAGE'],
+            // Use native image configuration for ratio and resolution
+            aspectRatio: input.aspectRatio,
+            imageSize: input.resolutionPrompt,
+          } as any,
         });
 
         if (media && media.url) {

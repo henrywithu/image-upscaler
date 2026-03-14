@@ -42,7 +42,7 @@ interface ProcessItem {
 
 export default function ChaewonHDApp() {
   const [apiKey, setApiKey] = useState('');
-  const [model, setModel] = useState('gemini-3.1-flash-image-preview');
+  const [model, setModel] = useState('gemini-2.5-flash-image');
   const [ratio, setRatio] = useState('16:9');
   const [resolution, setResolution] = useState('2K');
   const [items, setItems] = useState<ProcessItem[]>([]);
@@ -215,8 +215,9 @@ export default function ChaewonHDApp() {
                     <SelectValue placeholder="Select model" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="gemini-2.5-flash-image">Gemini 2.5 Flash Image</SelectItem>
                     <SelectItem value="gemini-3.1-flash-image-preview">Gemini 3.1 Flash Image</SelectItem>
-                    <SelectItem value="gemini-2.0-flash-exp">Gemini 2.0 Flash</SelectItem>
+                    <SelectItem value="gemini-3-pro-image-preview">Gemini 3 Pro Image (High Quality)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -453,7 +454,7 @@ export default function ChaewonHDApp() {
 
       {/* Footer Info */}
       <footer className="py-3 px-6 border-t bg-card text-[10px] text-muted-foreground flex justify-between items-center">
-        <p>© 2024 ChaewonHD AI. All processing is powered by Gemini 3.1 Flash Image.</p>
+        <p>© 2024 ChaewonHD AI. All processing is powered by Gemini AI.</p>
         <div className="flex gap-4">
           <span className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-green-500" /> Secure Processing</span>
           <span className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-green-500" /> Local Downloads</span>
