@@ -19,7 +19,7 @@ export function ImageComparison({ original, upscaled, className }: ImageComparis
     if (!isResizing || !containerRef.current) return;
 
     const rect = containerRef.current.getBoundingClientRect();
-    const x = 'pageX' in e ? e.pageX : e.touches[0].pageX;
+    const x = 'clientX' in e ? e.clientX : e.touches[0].clientX;
     const position = ((x - rect.left) / rect.width) * 100;
     
     if (position >= 0 && position <= 100) {
@@ -53,7 +53,7 @@ export function ImageComparison({ original, upscaled, className }: ImageComparis
   return (
     <div 
       ref={containerRef}
-      className={cn("relative w-full aspect-video rounded-lg overflow-hidden cursor-ew-resize bg-muted", className)}
+      className={cn("relative w-full aspect-video rounded-lg overflow-hidden cursor-ew-resize bg-muted touch-none select-none", className)}
       onMouseDown={handleMouseDown}
       onTouchStart={handleMouseDown}
     >
