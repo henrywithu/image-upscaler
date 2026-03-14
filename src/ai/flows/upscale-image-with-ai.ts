@@ -9,7 +9,6 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { googleAI } from '@genkit-ai/google-genai';
 
 // Helper function to extract MIME type from a data URI
 function getMimeTypeFromDataUri(dataUri: string): string | undefined {
@@ -67,10 +66,11 @@ const upscaleImageWithAIFlow = ai.defineFlow(
     for (const imageDataUri of input.images) {
       const mimeType = getMimeTypeFromDataUri(imageDataUri);
       if (!mimeType) {
-        console.error('Skipping invalid image data URI: missing MIME type.');
         continue;
       }
 
+      // No resolution or ratio strings in the text prompt.
+      // These are passed strictly as API configurations in imageConfig.
       const promptParts = [
         {
           media: {
@@ -79,22 +79,14 @@ const upscaleImageWithAIFlow = ai.defineFlow(
           },
         },
         {
-          text: `STRICT TASK: Perform Super Resolution Upscaling on this image.
-          
-REQUIRED SPECIFICATIONS:
-- Output Format: PNG
-- Quality: Ultra-High Fidelity, Pixel-Perfect, Super Resolution
-
-CRITICAL INSTRUCTIONS: 
-1. DO NOT change any content, subjects, or composition of the image.
-2. The output MUST be a high-resolution version of the EXACT same image.
-3. Maintain 100% fidelity to the original. Enhance textures and sharpness only.
-4. Do not add new elements, interpret the scene creatively, or alter lighting.`,
+          text: `STRICT SUPER RESOLUTION TASK: Perform pixel-perfect upscaling on this image. 
+          MAINTAIN 100% FIDELITY: Do not alter content, composition, subjects, or lighting. 
+          Enhance only the clarity and textures. 
+          OUTPUT FORMAT: PNG.`,
         },
       ];
 
       try {
-        // Ensure model name has the proper prefix if it doesn't already
         const modelRef = input.modelName.includes('/') ? input.modelName : `googleai/${input.modelName}`;
 
         const { media } = await ai.generate({
@@ -102,7 +94,7 @@ CRITICAL INSTRUCTIONS:
           prompt: promptParts,
           config: {
             responseModalities: ['IMAGE'],
-            // Use native image configuration for ratio and resolution as requested
+            // Native image parameters passed as model configurations
             imageConfig: {
               aspectRatio: input.aspectRatio,
               imageSize: input.resolutionPrompt,
@@ -112,17 +104,14 @@ CRITICAL INSTRUCTIONS:
 
         if (media && media.url) {
           upscaledImages.push(media.url);
-        } else {
-          console.warn(`No upscaled image media returned for model: ${input.modelName}`);
         }
       } catch (error) {
-        console.error(`Error upscaling image with model ${input.modelName}:`, error);
         throw error;
       }
     }
 
     if (upscaledImages.length === 0 && input.images.length > 0) {
-      throw new Error('The AI model failed to produce high-resolution output. This might be due to model limitations or invalid configuration.');
+      throw new Error('The AI model failed to produce upscaled output. Please verify your API key and configuration.');
     }
 
     return { upscaledImages };
