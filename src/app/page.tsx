@@ -122,11 +122,11 @@ export default function ChaewonHDApp() {
   };
 
   const upscaleAll = async () => {
-    const pendingItems = items.filter(i => i.status === 'pending');
-    if (pendingItems.length === 0) return;
+    const processableItems = items.filter(i => i.status !== 'processing');
+    if (processableItems.length === 0) return;
 
     setIsProcessingAll(true);
-    for (const item of pendingItems) {
+    for (const item of processableItems) {
       await handleUpscale(item);
     }
     setIsProcessingAll(false);
@@ -146,21 +146,11 @@ export default function ChaewonHDApp() {
     document.body.removeChild(link);
   };
 
-  const downloadAll = async () => {
+  const downloadAll = () => {
     const completedItems = items.filter(i => i.status === 'completed' && i.upscaled);
-    for (let i = 0; i < completedItems.length; i++) {
-      const item = completedItems[i];
-      const link = document.createElement('a');
-      link.href = item.upscaled!;
-      const baseName = item.name.substring(0, item.name.lastIndexOf('.')) || item.name;
-      link.download = `upscaled-${baseName}-${i + 1}.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      // Small delay prevents browsers from ignoring rapid subsequent downloads
-      await new Promise(resolve => setTimeout(resolve, 300));
-    }
+    completedItems.forEach((item) => {
+      downloadImage(item.upscaled!, item.name);
+    });
   };
 
   return (
@@ -321,7 +311,7 @@ export default function ChaewonHDApp() {
                 <Button
                   size="sm"
                   className="bg-accent text-accent-foreground hover:bg-accent/80"
-                  disabled={isProcessingAll || items.every(i => i.status !== 'pending')}
+                  disabled={isProcessingAll || items.every(i => i.status === 'processing')}
                   onClick={upscaleAll}
                 >
                   {isProcessingAll ? <RefreshCw className="w-4 h-4 animate-spin mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
@@ -385,11 +375,11 @@ export default function ChaewonHDApp() {
                           </div>
                         </div>
 
-                        {item.status === 'pending' && (
+                        {item.status !== 'processing' && (
                           <div className="mt-3 flex justify-end">
                             <Button size="sm" variant="ghost" className="h-8 text-primary" onClick={() => handleUpscale(item)}>
-                              Process
-                              <ArrowRight className="w-3 h-3 ml-2" />
+                              {item.status === 'pending' ? 'Process' : 'Re-process'}
+                              {item.status === 'pending' ? <ArrowRight className="w-3 h-3 ml-2" /> : <RefreshCw className="w-3 h-3 ml-2" />}
                             </Button>
                           </div>
                         )}
