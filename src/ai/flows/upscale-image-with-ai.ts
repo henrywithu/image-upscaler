@@ -26,17 +26,11 @@ const UpscaleImageInputSchema = z.object({
   modelName: z.string().describe(
     "The name of the Google AI model to use for upscaling, e.g., 'gemini-3.1-flash-image-preview' or 'gemini-2.5-flash-image'."
   ),
-  // Note: For generative image models like 'gemini-3.1-flash-image-preview' used via Genkit's `ai.generate`,
-  // direct control over output `resolution` and `aspectRatio` is typically not available through
-  // the `config` object in the same way as some other specialized image manipulation APIs.
-  // Instead, these parameters are generally guided by providing clear instructions within the text prompt.
-  // This implementation uses the `resolutionPrompt` and `aspectRatio` inputs to construct the text prompt
-  // to instruct the AI model on the desired output characteristics.
   resolutionPrompt: z.string().describe(
-    "A descriptive prompt for the desired output resolution, e.g., 'very high resolution', '4K details', 'larger size'."
+    "A descriptive prompt for the desired output resolution, e.g., '2K', '4K', '1K'."
   ),
   aspectRatio: z.string().describe(
-    "The desired aspect ratio for the output image, e.g., '16:9', '4:3', '1:1'. This will be conveyed via the prompt."
+    "The desired aspect ratio for the output image, e.g., '16:9', '1:1'."
   )
 });
 export type UpscaleImageInput = z.infer<typeof UpscaleImageInputSchema>;
@@ -51,10 +45,31 @@ const UpscaleImageOutputSchema = z.object({
 export type UpscaleImageOutput = z.infer<typeof UpscaleImageOutputSchema>;
 
 /**
+ * Maps abstract resolution labels and aspect ratios to explicit pixel instructions.
+ * This helps the AI model understand the exact target size required.
+ */
+function getPixelInstruction(resolution: string, ratio: string): string {
+  const resMap: Record<string, number> = {
+    "512": 512,
+    "1K": 1080,
+    "2K": 1440,
+    "4K": 2160
+  };
+  
+  const targetH = resMap[resolution] || 1080;
+  const ratioParts = ratio.split(':').map(Number);
+  
+  if (ratioParts.length === 2 && !isNaN(ratioParts[0]) && !isNaN(ratioParts[1])) {
+    const factor = targetH / ratioParts[1];
+    const targetW = Math.round(ratioParts[0] * factor);
+    return `${targetW}x${targetH} pixels`;
+  }
+  
+  return `${resolution} resolution`;
+}
+
+/**
  * Upscales one or more images using a specified Google AI image generation model.
- * The upscaling parameters like resolution and aspect ratio are primarily guided
- * through the prompt, as direct configuration options are not universally available
- * for all image models via the Genkit API's `config` object.
  * @param input - The input containing images, model name, and desired upscaling parameters.
  * @returns An object containing an array of upscaled images as data URIs.
  */
@@ -72,16 +87,17 @@ const upscaleImageWithAIFlow = ai.defineFlow(
   },
   async (input) => {
     const upscaledImages: string[] = [];
+    const pixelDim = getPixelInstruction(input.resolutionPrompt, input.aspectRatio);
 
     for (const imageDataUri of input.images) {
       const mimeType = getMimeTypeFromDataUri(imageDataUri);
       if (!mimeType) {
         console.error('Skipping invalid image data URI: missing MIME type.');
-        continue; // Skip to the next image if MIME type is missing
+        continue;
       }
 
-      // Construct the prompt parts for the image generation model.
-      // We instruct the model to upscale and adhere to aspect ratio and PNG format via text.
+      // We use explicit pixel instructions in the prompt to force the model to 
+      // generate a high-resolution output matching the user's selection.
       const promptParts = [
         {
           media: {
@@ -90,7 +106,16 @@ const upscaleImageWithAIFlow = ai.defineFlow(
           },
         },
         {
-          text: `Upscale this image to ${input.resolutionPrompt} while maintaining its content and style. The output aspect ratio should be ${input.aspectRatio}. Regenerate this image at a higher quality and export it as a PNG file. Focus on enhancing details and clarity. The final output MUST be a PNG.`,
+          text: `STRICT TASK: Upscale this image to a professional, high-fidelity PNG version.
+          
+REQUIRED SPECIFICATIONS:
+- Target Resolution: ${pixelDim}
+- Aspect Ratio: ${input.aspectRatio}
+- Output Format: PNG
+- Quality: Super Resolution, extremely sharp details, enhanced textures
+
+INSTRUCTIONS: 
+Redraw and enhance the input image so that it matches the Target Resolution of ${pixelDim}. Do not return a low-resolution or standard-sized preview. The output MUST be a high-resolution image. Maintain perfect consistency with the original subject and composition.`,
         },
       ];
 
@@ -99,7 +124,6 @@ const upscaleImageWithAIFlow = ai.defineFlow(
           model: googleAI.model(input.modelName),
           prompt: promptParts,
           config: {
-            // Ensure the model is configured to return image output.
             responseModalities: ['IMAGE']
           },
         });
@@ -107,17 +131,15 @@ const upscaleImageWithAIFlow = ai.defineFlow(
         if (media && media.url) {
           upscaledImages.push(media.url);
         } else {
-          console.warn(`No upscaled image media returned for one of the inputs using model: ${input.modelName}`);
+          console.warn(`No upscaled image media returned for model: ${input.modelName}`);
         }
       } catch (error) {
-        console.error(
-          `Error upscaling image with model ${input.modelName}:`, "For image starting with", imageDataUri.substring(0, 50) + "...", error
-        );
+        console.error(`Error upscaling image with model ${input.modelName}:`, error);
       }
     }
 
     if (upscaledImages.length === 0 && input.images.length > 0) {
-      throw new Error('Failed to upscale any images. Check console for errors.');
+      throw new Error('The AI model failed to produce high-resolution output. This might be due to model limitations or high traffic.');
     }
 
     return { upscaledImages };
