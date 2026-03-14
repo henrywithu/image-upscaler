@@ -94,14 +94,19 @@ CRITICAL INSTRUCTIONS:
       ];
 
       try {
+        // Ensure model name has the proper prefix if it doesn't already
+        const modelRef = input.modelName.includes('/') ? input.modelName : `googleai/${input.modelName}`;
+
         const { media } = await ai.generate({
-          model: googleAI.model(input.modelName),
+          model: modelRef,
           prompt: promptParts,
           config: {
             responseModalities: ['IMAGE'],
-            // Use native image configuration for ratio and resolution
-            aspectRatio: input.aspectRatio,
-            imageSize: input.resolutionPrompt,
+            // Use native image configuration for ratio and resolution as requested
+            imageConfig: {
+              aspectRatio: input.aspectRatio,
+              imageSize: input.resolutionPrompt,
+            }
           } as any,
         });
 
@@ -112,11 +117,12 @@ CRITICAL INSTRUCTIONS:
         }
       } catch (error) {
         console.error(`Error upscaling image with model ${input.modelName}:`, error);
+        throw error;
       }
     }
 
     if (upscaledImages.length === 0 && input.images.length > 0) {
-      throw new Error('The AI model failed to produce high-resolution output. This might be due to model limitations or high traffic.');
+      throw new Error('The AI model failed to produce high-resolution output. This might be due to model limitations or invalid configuration.');
     }
 
     return { upscaledImages };

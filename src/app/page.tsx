@@ -117,6 +117,7 @@ export default function ChaewonHDApp() {
         error: error.message,
         progress: 0 
       } : i));
+      toast({ variant: 'destructive', title: 'Generation Error', description: error.message });
     }
   };
 
