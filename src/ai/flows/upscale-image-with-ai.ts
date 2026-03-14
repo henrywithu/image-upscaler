@@ -44,7 +44,7 @@ export type UpscaleImageInput = z.infer<typeof UpscaleImageInputSchema>;
 const UpscaleImageOutputSchema = z.object({
   upscaledImages: z.array(
     z.string().describe(
-      "An array of upscaled images, each as a data URI with a MIME type and Base64 encoding."
+      "An array of upscaled images, each as a data URI with a MIME type and Base64 encoding. Format will be PNG."
     )
   )
 });
@@ -81,7 +81,7 @@ const upscaleImageWithAIFlow = ai.defineFlow(
       }
 
       // Construct the prompt parts for the image generation model.
-      // We instruct the model to upscale and adhere to aspect ratio via text.
+      // We instruct the model to upscale and adhere to aspect ratio and PNG format via text.
       const promptParts = [
         {
           media: {
@@ -90,7 +90,7 @@ const upscaleImageWithAIFlow = ai.defineFlow(
           },
         },
         {
-          text: `Upscale this image to ${input.resolutionPrompt} while maintaining its content and style. The output aspect ratio should be ${input.aspectRatio}. Regenerate this image at a higher quality. Focus on enhancing details and clarity.`,
+          text: `Upscale this image to ${input.resolutionPrompt} while maintaining its content and style. The output aspect ratio should be ${input.aspectRatio}. Regenerate this image at a higher quality and export it as a PNG file. Focus on enhancing details and clarity. The final output MUST be a PNG.`,
         },
       ];
 
@@ -101,8 +101,6 @@ const upscaleImageWithAIFlow = ai.defineFlow(
           config: {
             // Ensure the model is configured to return image output.
             responseModalities: ['IMAGE']
-            // Direct resolution/aspectRatio configs are not standard for these models via Genkit's ai.generate config.
-            // They are guided by the text prompt as implemented above.
           },
         });
 
@@ -115,8 +113,6 @@ const upscaleImageWithAIFlow = ai.defineFlow(
         console.error(
           `Error upscaling image with model ${input.modelName}:`, "For image starting with", imageDataUri.substring(0, 50) + "...", error
         );
-        // Depending on requirements, could re-throw, push an error indicator, or skip.
-        // For now, we log the error and continue processing other images.
       }
     }
 

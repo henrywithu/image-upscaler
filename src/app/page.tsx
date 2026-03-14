@@ -121,7 +121,9 @@ export default function PixelPerfectApp() {
   const downloadImage = (url: string, filename: string) => {
     const link = document.createElement('a');
     link.href = url;
-    link.download = `upscaled-${filename}`;
+    // Ensure filename ends with .png
+    const baseName = filename.substring(0, filename.lastIndexOf('.')) || filename;
+    link.download = `upscaled-${baseName}.png`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -408,7 +410,7 @@ export default function PixelPerfectApp() {
                           </div>
                           <div className="flex-1 text-[10px] text-primary bg-primary/5 p-2 rounded">
                             <span className="block font-bold uppercase mb-1">AI Enhancements</span>
-                            <span>{resolution} • {ratio} Ratio • Super Resolution</span>
+                            <span>{resolution} • {ratio} Ratio • Super Resolution (PNG)</span>
                           </div>
                         </div>
                       </div>
