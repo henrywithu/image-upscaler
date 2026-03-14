@@ -41,8 +41,8 @@ interface ProcessItem {
 export default function PixelPerfectApp() {
   const [apiKey, setApiKey] = useState('');
   const [model, setModel] = useState('gemini-3.1-flash-image-preview');
-  const [ratio, setRatio] = useState('1:1');
-  const [resolution, setResolution] = useState('very high resolution');
+  const [ratio, setRatio] = useState('16:9');
+  const [resolution, setResolution] = useState('2K');
   const [items, setItems] = useState<ProcessItem[]>([]);
   const [isProcessingAll, setIsProcessingAll] = useState(false);
 
@@ -200,9 +200,19 @@ export default function PixelPerfectApp() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="1:1">1:1 Square</SelectItem>
-                    <SelectItem value="4:3">4:3 Standard</SelectItem>
-                    <SelectItem value="16:9">16:9 Cinema</SelectItem>
+                    <SelectItem value="1:4">1:4 Ultra Tall</SelectItem>
+                    <SelectItem value="1:8">1:8 Panoramic Tall</SelectItem>
+                    <SelectItem value="2:3">2:3 Vertical</SelectItem>
                     <SelectItem value="3:2">3:2 Classic</SelectItem>
+                    <SelectItem value="3:4">3:4 Portrait</SelectItem>
+                    <SelectItem value="4:1">4:1 Panoramic Wide</SelectItem>
+                    <SelectItem value="4:3">4:3 Standard</SelectItem>
+                    <SelectItem value="4:5">4:5 Instagram</SelectItem>
+                    <SelectItem value="5:4">5:4 Traditional</SelectItem>
+                    <SelectItem value="8:1">8:1 Ultra Wide</SelectItem>
+                    <SelectItem value="9:16">9:16 Social Video</SelectItem>
+                    <SelectItem value="16:9">16:9 Cinema</SelectItem>
+                    <SelectItem value="21:9">21:9 Ultrawide</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -214,9 +224,10 @@ export default function PixelPerfectApp() {
                     <SelectValue placeholder="Select resolution" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="high resolution">HD (Standard)</SelectItem>
-                    <SelectItem value="very high resolution">Ultra HD (4K)</SelectItem>
-                    <SelectItem value="extreme details and maximum resolution">Extreme Clarity</SelectItem>
+                    <SelectItem value="512">512px</SelectItem>
+                    <SelectItem value="1K">1K (1080p)</SelectItem>
+                    <SelectItem value="2K">2K (QHD)</SelectItem>
+                    <SelectItem value="4K">4K (UHD)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
