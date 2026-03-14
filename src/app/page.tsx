@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { 
   Upload, 
   Settings as SettingsIcon, 
@@ -10,9 +10,10 @@ import {
   Key, 
   Trash2, 
   CheckCircle2, 
-  AlertCircle,
   Sparkles,
-  ArrowRight
+  ArrowRight,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,6 +24,7 @@ import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Switch } from '@/components/ui/switch';
 import { toast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { ImageComparison } from '@/components/ImageComparison';
@@ -45,6 +47,21 @@ export default function ChaewonHDApp() {
   const [resolution, setResolution] = useState('2K');
   const [items, setItems] = useState<ProcessItem[]>([]);
   const [isProcessingAll, setIsProcessingAll] = useState(false);
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+
+  // Handle Theme Switching
+  useEffect(() => {
+    const root = window.document.documentElement;
+    if (theme === 'dark') {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+  };
 
   const onFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -53,14 +70,14 @@ export default function ChaewonHDApp() {
     const newItems: ProcessItem[] = Array.from(files).map(file => ({
       id: Math.random().toString(36).substr(2, 9),
       name: file.name,
-      original: '', // Will be filled below
+      original: '', 
       status: 'pending',
       progress: 0
     }));
 
     setItems(prev => [...prev, ...newItems]);
 
-    Array.from(files).forEach((file, index) => {
+    Array.from(files).forEach((file) => {
       const reader = new FileReader();
       reader.onloadend = () => {
         setItems(prev => prev.map(item => 
@@ -121,7 +138,6 @@ export default function ChaewonHDApp() {
   const downloadImage = (url: string, filename: string) => {
     const link = document.createElement('a');
     link.href = url;
-    // Ensure filename ends with .png
     const baseName = filename.substring(0, filename.lastIndexOf('.')) || filename;
     link.download = `upscaled-${baseName}.png`;
     document.body.appendChild(link);
@@ -130,7 +146,7 @@ export default function ChaewonHDApp() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground">
+    <div className="min-h-screen flex flex-col bg-background text-foreground transition-colors duration-300">
       <Toaster />
       
       {/* Navigation Header */}
@@ -141,11 +157,22 @@ export default function ChaewonHDApp() {
           </div>
           <h1 className="text-xl font-bold tracking-tight text-primary">ChaewonHD</h1>
         </div>
-        <div className="flex items-center gap-4">
-          <Badge variant="outline" className="hidden sm:flex bg-muted/50 border-primary/20 text-primary">AI-Powered Clarity</Badge>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Key className="w-4 h-4" />
-            <span className="max-w-[100px] truncate">{apiKey ? 'Key set' : 'No API key'}</span>
+        
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2">
+            <Sun className={`w-4 h-4 ${theme === 'light' ? 'text-primary' : 'text-muted-foreground'}`} />
+            <Switch checked={theme === 'dark'} onCheckedChange={toggleTheme} aria-label="Toggle dark mode" />
+            <Moon className={`w-4 h-4 ${theme === 'dark' ? 'text-primary' : 'text-muted-foreground'}`} />
+          </div>
+          
+          <Separator orientation="vertical" className="h-6 hidden sm:block" />
+          
+          <div className="flex items-center gap-4">
+            <Badge variant="outline" className="hidden sm:flex bg-muted/50 border-primary/20 text-primary">AI-Powered Clarity</Badge>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Key className="w-4 h-4" />
+              <span className="max-w-[100px] truncate">{apiKey ? 'Key set' : 'No API key'}</span>
+            </div>
           </div>
         </div>
       </header>
