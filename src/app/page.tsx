@@ -42,7 +42,7 @@ interface ProcessItem {
 
 export default function ChaewonHDApp() {
   const [apiKey, setApiKey] = useState('');
-  const [model, setModel] = useState('gemini-2.5-flash-image');
+  const [model, setModel] = useState('gemini-3.1-flash-image-preview');
   const [ratio, setRatio] = useState('16:9');
   const [resolution, setResolution] = useState('2K');
   const [items, setItems] = useState<ProcessItem[]>([]);
@@ -216,7 +216,6 @@ export default function ChaewonHDApp() {
                     <SelectValue placeholder="Select model" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="gemini-2.5-flash-image">Gemini 2.5 Flash Image</SelectItem>
                     <SelectItem value="gemini-3.1-flash-image-preview">Gemini 3.1 Flash Image</SelectItem>
                     <SelectItem value="gemini-3-pro-image-preview">Gemini 3 Pro Image (High Quality)</SelectItem>
                   </SelectContent>
