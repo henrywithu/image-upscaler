@@ -2,7 +2,7 @@ import type {Metadata} from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'PixelPerfect | Professional Image Upscaler',
+  title: 'ChaewonHD | Professional Image Upscaler',
   description: 'AI-powered image upscaling with Gemini 3.1 Flash',
 };
 

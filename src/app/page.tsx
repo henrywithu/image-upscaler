@@ -38,7 +38,7 @@ interface ProcessItem {
   progress: number;
 }
 
-export default function PixelPerfectApp() {
+export default function ChaewonHDApp() {
   const [apiKey, setApiKey] = useState('');
   const [model, setModel] = useState('gemini-3.1-flash-image-preview');
   const [ratio, setRatio] = useState('16:9');
@@ -139,7 +139,7 @@ export default function PixelPerfectApp() {
           <div className="bg-primary p-2 rounded-xl">
             <Sparkles className="w-6 h-6 text-white" />
           </div>
-          <h1 className="text-xl font-bold tracking-tight text-primary">PixelPerfect</h1>
+          <h1 className="text-xl font-bold tracking-tight text-primary">ChaewonHD</h1>
         </div>
         <div className="flex items-center gap-4">
           <Badge variant="outline" className="hidden sm:flex bg-muted/50 border-primary/20 text-primary">AI-Powered Clarity</Badge>
@@ -426,7 +426,7 @@ export default function PixelPerfectApp() {
 
       {/* Footer Info */}
       <footer className="py-3 px-6 border-t bg-card text-[10px] text-muted-foreground flex justify-between items-center">
-        <p>© 2024 PixelPerfect AI. All processing is powered by Gemini 3.1 Flash Image.</p>
+        <p>© 2024 ChaewonHD AI. All processing is powered by Gemini 3.1 Flash Image.</p>
         <div className="flex gap-4">
           <span className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-green-500" /> Secure Processing</span>
           <span className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-green-500" /> Local Downloads</span>
